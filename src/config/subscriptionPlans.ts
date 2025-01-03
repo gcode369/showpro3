@@ -25,13 +25,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlans = {
     features: [
       'All Monthly Plan features',
       'Save $150 annually',
-      'Extended analytics history',
-      'Priority customer support',
-      'Advanced reporting tools',
-      'Custom integrations',
-      'Dedicated account manager',
-      'Early access to new features',
-      'Bulk import tools'
+     
     ],
     paymentLink: 'https://buy.stripe.com/6oEg0C1sibB4c8g5km'
   }
