@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
 import { Button } from '../common/Button';
+import { FormField } from './FormField';
 import { PrequalificationSection } from './PrequalificationSection';
 import { authService } from '../../services/auth/AuthService';
 import { useAuthStore } from '../../store/authStore';
 import { BC_CITIES } from '../../constants/locations';
+import { ErrorAlert } from '../common/ErrorAlert';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
 type FormData = {
   name: string;
@@ -20,10 +22,12 @@ type FormData = {
     lender: string;
     expiryDate: string;
   };
+  preferredContact: 'email' | 'phone' | 'both';
 };
 
 export function ClientRegistrationForm() {
   const navigate = useNavigate();
+  const { setUser } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -38,7 +42,8 @@ export function ClientRegistrationForm() {
       amount: '',
       lender: '',
       expiryDate: ''
-    }
+    },
+    preferredContact: 'email'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,17 +56,28 @@ export function ClientRegistrationForm() {
         throw new Error('Passwords do not match');
       }
 
-      // Register user
-      const { session } = await authService.register(formData.email, formData.password, {
+      const { session, user } = await authService.register(formData.email, formData.password, {
         name: formData.name,
-        role: 'client'
+        phone: formData.phone,
+        role: 'client',
+        preferredAreas: formData.preferredAreas,
+        prequalified: formData.prequalified,
+        prequalificationDetails: formData.prequalified ? formData.prequalificationDetails : undefined,
+        preferredContact: formData.preferredContact
       });
 
       if (!session?.user) {
         throw new Error('Registration failed');
       }
 
-      // Redirect to client dashboard
+      setUser({
+        id: session.user.id,
+        email: session.user.email!,
+        name: formData.name,
+        role: 'client',
+        phone: formData.phone
+      });
+
       navigate('/client');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -70,8 +86,8 @@ export function ClientRegistrationForm() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
     
     if (name.startsWith('prequalificationDetails.')) {
       const field = name.split('.')[1];
@@ -85,7 +101,7 @@ export function ClientRegistrationForm() {
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
       }));
     }
   };
@@ -101,83 +117,71 @@ export function ClientRegistrationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-          {error}
-        </div>
-      )}
+      {error && <ErrorAlert message={error} />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Full Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        <FormField
+          label="Full Name"
+          name="name"
+          type="text"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+
+        <FormField
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+
+        <FormField
+          label="Phone"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="(XXX) XXX-XXXX"
+          required
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+            Preferred Contact Method
           </label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
+          <select
+            name="preferredContact"
+            value={formData.preferredContact}
             onChange={handleChange}
-            required
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+          >
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="both">Both</option>
+          </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phone
-          </label>
-          <input
-            type="tel"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        <FormField
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          minLength={8}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            minLength={8}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        <FormField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <div>
@@ -212,7 +216,14 @@ export function ClientRegistrationForm() {
         className="w-full"
         disabled={loading}
       >
-        {loading ? 'Creating Account...' : 'Create Account'}
+        {loading ? (
+          <div className="flex items-center justify-center gap-2">
+            <LoadingSpinner size="sm" />
+            <span>Creating Account...</span>
+          </div>
+        ) : (
+          'Create Account'
+        )}
       </Button>
     </form>
   );

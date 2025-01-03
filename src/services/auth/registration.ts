@@ -12,7 +12,8 @@ export async function registerUser(data: UserRegistrationData) {
       options: {
         data: {
           name: data.name,
-          role: data.role
+          role: data.role,
+          phone: data.phone
         }
       }
     });
@@ -44,9 +45,14 @@ export async function registerUser(data: UserRegistrationData) {
       const clientData: ClientProfileData = {
         name: data.name,
         phone: data.phone,
-        preferred_areas: [],
-        preferred_contact: 'email',
-        prequalified: false
+        preferred_areas: data.preferredAreas || [],
+        preferred_contact: data.preferredContact || 'email',
+        prequalified: data.prequalified || false,
+        prequalification_details: data.prequalified ? {
+          amount: data.prequalificationDetails?.amount,
+          lender: data.prequalificationDetails?.lender,
+          expiry_date: data.prequalificationDetails?.expiryDate
+        } : undefined
       };
       await createClientProfile(authData.user.id, clientData);
     }
