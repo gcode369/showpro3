@@ -16,10 +16,6 @@ export function useAuth() {
 
       const { session, profile } = await authService.login(email, password);
 
-      if (!session?.user) {
-        throw new Error('Login failed');
-      }
-
       setUser(profile);
 
       // For agents, check subscription status
