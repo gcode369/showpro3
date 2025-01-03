@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
-import type { User } from '../../types/user';
-import { createAgentProfile } from './profileService';
+import type { UserRegistrationData } from '../../types/user';
+import { registerUser } from './registration';
 
 export class AuthService {
   async login(email: string, password: string) {
@@ -13,9 +13,12 @@ export class AuthService {
       if (error) throw error;
       if (!data.session?.user) throw new Error('Login failed - no session created');
 
+      const userRole = data.session.user.user_metadata.role || 'client';
+      const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
+
       // Get user profile
       const { data: profile, error: profileError } = await supabase
-        .from(data.session.user.user_metadata.role === 'agent' ? 'agent_profiles' : 'client_profiles')
+        .from(profileTable)
         .select('*')
         .eq('user_id', data.session.user.id)
         .single();
@@ -28,7 +31,8 @@ export class AuthService {
           id: data.session.user.id,
           email: data.session.user.email!,
           name: profile.name,
-          role: data.session.user.user_metadata.role,
+          role: userRole,
+          phone: profile.phone,
           subscriptionStatus: profile.subscription_status
         }
       };
@@ -44,40 +48,18 @@ export class AuthService {
     }
   }
 
-  async register(email: string, password: string, userData: Partial<User>) {
+  async register(email: string, password: string, userData: Partial<UserRegistrationData>) {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      return await registerUser({
         email,
         password,
-        options: {
-          data: {
-            name: userData.name,
-            role: userData.role
-          }
-        }
+        name: userData.name || '',
+        phone: userData.phone,
+        role: userData.role || 'client'
       });
-
-      if (error) throw error;
-      if (!data.user) throw new Error('Registration failed - no user created');
-
-      if (userData.role === 'agent') {
-        await createAgentProfile(data.user.id, {
-          name: userData.name || '',
-          subscription_tier: 'basic',
-          subscription_status: 'trial'
-        });
-      }
-
-      return { session: data.session, user: data.user };
     } catch (err) {
       console.error('Registration error:', err);
-      if (err instanceof Error) {
-        if (err.message.includes('already registered')) {
-          throw new Error('An account with this email already exists');
-        }
-        throw err;
-      }
-      throw new Error('Registration failed');
+      throw err;
     }
   }
 
