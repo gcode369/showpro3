@@ -1,11 +1,6 @@
-import { Agent } from './agent';
-
 export type PropertyCategory = 'residential' | 'commercial';
 
-export type PropertyType = {
-  residential: 'house' | 'condo' | 'townhouse' | 'apartment';
-  commercial: 'office' | 'retail' | 'industrial' | 'warehouse';
-};
+export type PropertyType = 'house' | 'condo' | 'townhouse' | 'apartment' | 'office' | 'retail' | 'industrial' | 'warehouse';
 
 export type Property = {
   id: string;
@@ -13,18 +8,17 @@ export type Property = {
   address: string;
   city: string;
   price: number;
-  description: string;
+  description?: string;
   images: string[];
-  agent_id: string; // Changed from agentId to match database
-  agent?: Agent;
+  agent_id: string;
   status: 'available' | 'pending' | 'sold';
   category: PropertyCategory;
-  type: PropertyType[PropertyCategory];
+  type: PropertyType;
   features: string[];
-  bedrooms?: number;
-  bathrooms?: number;
-  square_feet?: number; // Changed from squareFeet to match database
-  listing_url?: string; // Changed from listingUrl to match database
-  created_at: string; // Changed from createdAt to match database
-  updated_at: string; // Changed from updatedAt to match database
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  square_feet?: number | null;
+  listing_url?: string | null;
+  created_at: string;
+  updated_at: string;
 };

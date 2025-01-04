@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlanCard } from '../../components/subscription/PlanCard';
 import { useAuthStore } from '../../store/authStore';
 import { SUBSCRIPTION_PLANS } from '../../config/subscriptionPlans';
 import type { PlanType } from '../../types/subscription';
 
 export default function SubscriptionPage() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Redirect to dashboard if user already has active subscription
+    if (user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trial') {
+      navigate('/agent');
+    }
+  }, [user?.subscriptionStatus, navigate]);
+
+  // Return null while checking subscription status to prevent flash of content
+  if (user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trial') {
+    return null;
+  }
 
   const handleSubscribe = (planType: PlanType) => {
     try {

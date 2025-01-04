@@ -17,6 +17,12 @@ export function usePropertyForm() {
         throw new Error('User not authenticated');
       }
 
+      // Validate required fields
+      if (!formData.title || !formData.address || !formData.city || !formData.price) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Create property
       await propertyService.createProperty(formData, user.id);
       return true;
     } catch (err) {

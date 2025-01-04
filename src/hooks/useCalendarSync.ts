@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProperties } from './useProperties';
 import { usePropertyShowings } from './usePropertyShowings';
+import type { Property } from '../types/property';
 import type { ShowingTimeSlot } from '../types/propertyShowing';
 
 export function useCalendarSync(agentId?: string) {
@@ -41,7 +42,7 @@ export function useCalendarSync(agentId?: string) {
   };
 
   // Update existing time slots
-  const updateTimeSlots = async (showingId: string, slots: ShowingTimeSlot[]) => {
+  const updateTimeSlots = async (propertyId: string, showingId: string, slots: ShowingTimeSlot[]) => {
     try {
       setError(null);
       await updateShowingTimeSlots(showingId, slots);
@@ -53,9 +54,7 @@ export function useCalendarSync(agentId?: string) {
   };
 
   useEffect(() => {
-    if (properties.length > 0 || showings.length > 0) {
-      setLoading(false);
-    }
+    setLoading(false);
   }, [properties, showings]);
 
   return {

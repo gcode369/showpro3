@@ -13,7 +13,6 @@ export function ProtectedRoute({ children, userType, requiresSubscription = fals
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Redirect to appropriate login page
     return <Navigate to={`/login/${userType || 'client'}`} state={{ from: location }} replace />;
   }
 
@@ -24,7 +23,11 @@ export function ProtectedRoute({ children, userType, requiresSubscription = fals
 
   // Check subscription for agent routes
   if (requiresSubscription && user?.role === 'agent') {
-    if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
+    const needsSubscription = !user.subscriptionStatus || user.subscriptionStatus === 'inactive';
+    const isSubscriptionPage = location.pathname === '/subscription';
+
+    // Only redirect to subscription if needed and not already there
+    if (needsSubscription && !isSubscriptionPage) {
       return <Navigate to="/subscription" state={{ from: location }} replace />;
     }
   }
