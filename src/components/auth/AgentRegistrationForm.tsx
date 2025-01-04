@@ -15,9 +15,9 @@ export function AgentRegistrationForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
-    username: '',
     name: '',
+    username: '',
+    email: '',
     phone: '',
     password: '',
     confirmPassword: ''
@@ -104,7 +104,43 @@ export function AgentRegistrationForm() {
           placeholder="Choose a unique username"
         />
 
-        {/* ... rest of the form fields ... */}
+        <FormField
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+
+        <FormField
+          label="Phone"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          required
+          placeholder="XXX-XXX-XXXX"
+        />
+
+        <FormField
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          minLength={8}
+        />
+
+        <FormField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          required
+        />
       </div>
 
       <Button
