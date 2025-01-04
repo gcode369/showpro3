@@ -8,6 +8,7 @@ import { validateForm, agentRegistrationSchema } from '../../utils/validation';
 import { checkUsernameAvailability } from '../../services/auth/usernameService';
 import { ErrorAlert } from '../common/ErrorAlert';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import type { UserRegistrationData } from '../../types/user';
 
 export function AgentRegistrationForm() {
   const navigate = useNavigate();
@@ -22,6 +23,11 @@ export function AgentRegistrationForm() {
     password: '',
     confirmPassword: ''
   });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,12 +52,16 @@ export function AgentRegistrationForm() {
       }
 
       // Register user
-      const { session, user } = await authService.register(formData.email, formData.password, {
+      const registrationData: UserRegistrationData = {
+        email: formData.email,
+        password: formData.password,
         name: formData.name,
         username: formData.username,
         phone: formData.phone,
         role: 'agent'
-      });
+      };
+
+      const { session } = await authService.register(formData.email, formData.password, registrationData);
 
       if (!session?.user) {
         throw new Error('Registration failed');
@@ -73,11 +83,6 @@ export function AgentRegistrationForm() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -119,8 +124,8 @@ export function AgentRegistrationForm() {
           type="tel"
           value={formData.phone}
           onChange={handleChange}
-          required
           placeholder="(XXX) XXX-XXXX"
+          required
         />
 
         <FormField

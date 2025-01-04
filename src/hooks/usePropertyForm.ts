@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useProperties } from './useProperties';
+import { propertyService } from '../services/property/PropertyService';
 import { useAuthStore } from '../store/authStore';
 import type { Property } from '../types/property';
 
 export function usePropertyForm() {
   const { user } = useAuthStore();
-  const { addProperty } = useProperties();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -18,13 +17,10 @@ export function usePropertyForm() {
         throw new Error('User not authenticated');
       }
 
-      await addProperty({
-        ...formData,
-        agent_id: user.id
-      });
-
+      await propertyService.createProperty(formData, user.id);
       return true;
     } catch (err) {
+      console.error('Property form error:', err);
       setError(err instanceof Error ? err.message : 'Failed to add property');
       return false;
     } finally {

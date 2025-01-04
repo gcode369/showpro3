@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth/AuthService';
 import { useAuthStore } from '../store/authStore';
+import type { UserProfile } from '../types/auth';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -16,6 +17,10 @@ export function useAuth() {
 
       const { session, profile } = await authService.login(email, password);
 
+      if (!session?.user) {
+        throw new Error('Login failed - no session created');
+      }
+
       setUser(profile);
 
       // For agents, check subscription status
@@ -26,7 +31,6 @@ export function useAuth() {
         }
       }
 
-      // Navigate to appropriate dashboard
       navigate(profile.role === 'agent' ? '/agent' : '/client');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
