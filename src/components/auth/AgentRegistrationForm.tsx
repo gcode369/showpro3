@@ -120,7 +120,7 @@ export function AgentRegistrationForm() {
           value={formData.phone}
           onChange={handleChange}
           required
-          placeholder="XXX-XXX-XXXX"
+          placeholder="(XXX) XXX-XXXX"
         />
 
         <FormField
