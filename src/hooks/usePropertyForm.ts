@@ -18,8 +18,21 @@ export function usePropertyForm() {
       }
 
       // Validate required fields
-      if (!formData.title || !formData.address || !formData.city || !formData.price) {
-        throw new Error('Please fill in all required fields');
+      const requiredFields = {
+        title: 'Title',
+        address: 'Address',
+        city: 'City',
+        price: 'Price',
+        category: 'Category',
+        type: 'Property Type'
+      } as const;
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([key]) => !formData[key as keyof typeof requiredFields])
+        .map(([, label]) => label);
+
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in the following required fields: ${missingFields.join(', ')}`);
       }
 
       // Create property
