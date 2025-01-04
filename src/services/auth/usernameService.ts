@@ -1,18 +1,20 @@
 import { supabase } from '../supabase';
 
 export async function checkUsernameAvailability(username: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('agent_profiles')
-    .select('username')
-    .eq('username', username)
-    .single();
+  try {
+    const { count, error } = await supabase
+      .from('agent_profiles')
+      .select('username', { count: 'exact', head: true })
+      .eq('username', username);
 
-  if (error && error.code === 'PGRST116') {
-    // No results found, username is available
-    return true;
+    if (error) throw error;
+    
+    // If count is 0, username is available
+    return count === 0;
+  } catch (err) {
+    console.error('Username check error:', err);
+    throw new Error('Failed to check username availability');
   }
-
-  return false;
 }
 
 export async function searchAgentsByUsername(query: string) {
