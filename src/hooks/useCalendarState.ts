@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useCalendar } from './useCalendar';
 import { useBookings } from './useBookings';
 import { useAuthStore } from '../store/authStore';
@@ -30,7 +30,7 @@ export function useCalendarState(propertyId: string) {
   };
 
   const handleBookSlot = async (attendees: number, notes?: string) => {
-    if (!user || !selectedSlot) return;
+    if (!user || !selectedSlot) return false;
 
     try {
       await createBooking({
@@ -39,14 +39,15 @@ export function useCalendarState(propertyId: string) {
         client_id: user.id,
         agent_id: selectedSlot.agent_id,
         attendees,
-        notes
+        notes,
+        status: 'pending'
       });
 
       // Update the slot's status
       await updateTimeSlot(selectedSlot.id, {
         ...selectedSlot,
-        is_booked: true,
-        current_attendees: (selectedSlot.current_attendees || 0) + attendees
+        isBooked: true,
+        currentAttendees: (selectedSlot.currentAttendees || 0) + attendees
       });
 
       setSelectedSlot(null);

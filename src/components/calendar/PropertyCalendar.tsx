@@ -80,7 +80,6 @@ export function PropertyCalendar({ propertyId, readOnly = false, onSlotSelect }:
       {showModal && (
         <ShowingTimeSlotModal
           propertyId={propertyId}
-          date={currentDate.toISOString().split('T')[0]}
           onClose={() => setShowModal(false)}
           onAdd={handleAddTimeSlots}
         />
