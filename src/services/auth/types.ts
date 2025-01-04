@@ -1,5 +1,6 @@
 export type AgentProfileData = {
     name: string;
+    username: string;
     phone?: string;
     subscription_tier: 'basic' | 'premium';
     subscription_status: 'trial' | 'active' | 'inactive';
