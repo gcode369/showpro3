@@ -17,6 +17,10 @@ export class AuthService {
       const userRole = data.session.user.user_metadata.role || 'client';
       const profile = await getUserProfile(data.session.user.id, userRole);
 
+      if (!profile) {
+        throw new Error('User profile not found');
+      }
+
       const user: AuthUser = {
         id: data.session.user.id,
         email: data.session.user.email!,
@@ -29,16 +33,20 @@ export class AuthService {
       return { user };
     } catch (err) {
       console.error('Login error:', err);
-      throw new Error(err instanceof Error ? err.message : 'Login failed');
+      throw err instanceof Error ? err : new Error('Login failed');
     }
   }
 
   async register(email: string, password: string, userData: UserRegistrationData) {
     try {
-      return await registerUser({ ...userData, email, password });
+      const result = await registerUser({ ...userData, email, password });
+      if (!result?.user) {
+        throw new Error('Registration failed - invalid response');
+      }
+      return result;
     } catch (err) {
       console.error('Registration error:', err);
-      throw new Error(err instanceof Error ? err.message : 'Registration failed');
+      throw err instanceof Error ? err : new Error('Registration failed');
     }
   }
 }

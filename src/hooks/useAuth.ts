@@ -15,7 +15,15 @@ export function useAuth() {
       setError(null);
 
       const { user } = await authService.login(email, password);
+      
+      if (!user) {
+        throw new Error('Login failed - no user data received');
+      }
+
       setUser(user);
+
+      // Clear loading before navigation
+      setLoading(false);
 
       if (user.role === 'agent') {
         if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
@@ -27,8 +35,8 @@ export function useAuth() {
         navigate('/client');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
       setLoading(false);
     }
   };
@@ -38,9 +46,24 @@ export function useAuth() {
       setLoading(true);
       setError(null);
 
-      await authService.register(email, password, userData);
-      await login(email, password); // Auto login after registration
+      const result = await authService.register(email, password, userData);
+      
+      if (!result?.user) {
+        throw new Error('Registration failed - no user data received');
+      }
+
+      setUser(result.user);
+      
+      // Clear loading before navigation
+      setLoading(false);
+
+      if (result.user.role === 'agent') {
+        navigate('/subscription');
+      } else {
+        navigate('/client');
+      }
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'Registration failed');
       setLoading(false);
     }
