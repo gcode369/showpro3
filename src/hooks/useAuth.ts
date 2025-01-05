@@ -22,16 +22,16 @@ export function useAuth() {
 
       setUser(user);
 
-      // For agents, check subscription status
+      // Navigate based on role and subscription status
       if (user.role === 'agent') {
         if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
           navigate('/subscription');
-          return;
+        } else {
+          navigate('/agent');
         }
+      } else {
+        navigate('/client');
       }
-
-      // Navigate based on role
-      navigate(user.role === 'agent' ? '/agent' : '/client');
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
