@@ -1,13 +1,12 @@
-import React from 'react';
+import { type FC } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, UserCircle, Building2 } from 'lucide-react';
-import { Button } from '../common/Button';
 
 type GetStartedModalProps = {
   onClose: () => void;
 };
 
-export function GetStartedModal({ onClose }: GetStartedModalProps) {
+export const GetStartedModal: FC<GetStartedModalProps> = ({ onClose }) => {
   const navigate = useNavigate();
 
   const handleSelection = (type: 'agent' | 'client') => {
@@ -55,4 +54,4 @@ export function GetStartedModal({ onClose }: GetStartedModalProps) {
       </div>
     </div>
   );
-}
+};

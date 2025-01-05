@@ -37,7 +37,7 @@ export function useCalendarState(propertyId: string) {
         time_slot_id: selectedSlot.id,
         property_id: propertyId,
         client_id: user.id,
-        agent_id: selectedSlot.agent_id,
+        agent_id: selectedSlot.agentId,
         attendees,
         notes,
         status: 'pending'

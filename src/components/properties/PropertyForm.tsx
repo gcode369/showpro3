@@ -9,6 +9,7 @@ import {
   PropertyImages
 } from './form';
 import { usePropertyForm } from '../../hooks/usePropertyForm';
+import { ErrorAlert } from '../common/ErrorAlert';
 import type { Property } from '../../types/property';
 
 type PropertyFormProps = {
@@ -29,14 +30,23 @@ export function PropertyForm({ onClose, onSuccess }: PropertyFormProps) {
     category: 'residential',
     type: 'house',
     features: [],
-    bedrooms: undefined,
-    bathrooms: undefined,
-    square_feet: undefined,
-    listing_url: undefined
+    bedrooms: null,
+    bathrooms: null,
+    square_feet: null,
+    listing_url: null
   });
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields before submission
+    if (!formData.address.trim()) {
+      return;
+    }
+    if (!formData.city.trim()) {
+      return;
+    }
+
     const success = await handleSubmit(formData);
     if (success) {
       onSuccess();
@@ -58,11 +68,7 @@ export function PropertyForm({ onClose, onSuccess }: PropertyFormProps) {
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
+        {error && <ErrorAlert message={error} />}
 
         <form onSubmit={handleFormSubmit} className="space-y-8">
           <PropertyBasicInfo data={formData} onChange={handleChange} />

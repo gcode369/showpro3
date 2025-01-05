@@ -1,6 +1,7 @@
 export type ShowingTimeSlot = {
   id: string;
   propertyId: string;
+  agentId: string;  // Add this field
   date: string;
   startTime: string;
   endTime: string;

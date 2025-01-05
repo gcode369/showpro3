@@ -1,13 +1,12 @@
-import React from 'react';
+import { type FC } from 'react';
 import { ActivityItem } from './ActivityItem';
 import type { LeadActivity } from '../../types/lead';
 
 type LeadActivityListProps = {
   activities: LeadActivity[];
-  className?: string;
 };
 
-export function LeadActivityList({ activities, className = '' }: LeadActivityListProps) {
+export const LeadActivityList: FC<LeadActivityListProps> = ({ activities }) => {
   if (activities.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -17,10 +16,10 @@ export function LeadActivityList({ activities, className = '' }: LeadActivityLis
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className="space-y-4">
       {activities.map((activity) => (
         <ActivityItem key={activity.id} activity={activity} />
       ))}
     </div>
   );
-}
+};

@@ -28,40 +28,12 @@ export function useLeads(openHouseId: string) {
     }
   };
 
-  const addLead = async (leadData: Omit<Lead, 'id' | 'registrationDate' | 'followUpStatus'>) => {
-    try {
-      const { data, error: insertError } = await supabase
-        .from('open_house_leads')
-        .insert([{
-          open_house_id: openHouseId,
-          name: leadData.name,
-          email: leadData.email,
-          phone: leadData.phone,
-          notes: leadData.notes,
-          interested_in_similar: leadData.interestedInSimilar,
-          prequalified: leadData.prequalified,
-          follow_up_status: 'pending'
-        }])
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-      setLeads(prev => [data, ...prev]);
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add lead');
-      throw err;
-    }
-  };
-
   const updateLeadStatus = async (leadId: string, status: Lead['followUpStatus']) => {
     try {
-      const { data, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('open_house_leads')
         .update({ follow_up_status: status })
-        .eq('id', leadId)
-        .select()
-        .single();
+        .eq('id', leadId);
 
       if (updateError) throw updateError;
       setLeads(prev => prev.map(lead => 
@@ -77,7 +49,6 @@ export function useLeads(openHouseId: string) {
     leads,
     loading,
     error,
-    addLead,
     updateLeadStatus,
     refreshLeads: fetchLeads
   };

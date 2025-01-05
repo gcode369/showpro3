@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProperties } from './useProperties';
 import { usePropertyShowings } from './usePropertyShowings';
-import type { Property } from '../types/property';
 import type { ShowingTimeSlot } from '../types/propertyShowing';
 
 export function useCalendarSync(agentId?: string) {
@@ -20,7 +19,12 @@ export function useCalendarSync(agentId?: string) {
       if (!acc[showing.propertyId][slot.date]) {
         acc[showing.propertyId][slot.date] = [];
       }
-      acc[showing.propertyId][slot.date].push(slot);
+      // Ensure agentId is included in each time slot
+      const slotWithAgent: ShowingTimeSlot = {
+        ...slot,
+        agentId: agentId || ''
+      };
+      acc[showing.propertyId][slot.date].push(slotWithAgent);
     });
     
     return acc;
@@ -33,7 +37,13 @@ export function useCalendarSync(agentId?: string) {
       const property = properties.find(p => p.id === propertyId);
       if (!property) throw new Error('Property not found');
 
-      await addPropertyShowing(property, slots);
+      // Ensure agentId is included in new slots
+      const slotsWithAgent = slots.map(slot => ({
+        ...slot,
+        agentId: agentId || ''
+      }));
+
+      await addPropertyShowing(property, slotsWithAgent);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add time slots');
@@ -42,10 +52,15 @@ export function useCalendarSync(agentId?: string) {
   };
 
   // Update existing time slots
-  const updateTimeSlots = async (propertyId: string, showingId: string, slots: ShowingTimeSlot[]) => {
+  const updateTimeSlots = async (showingId: string, slots: ShowingTimeSlot[]) => {
     try {
       setError(null);
-      await updateShowingTimeSlots(showingId, slots);
+      // Ensure agentId is preserved in updated slots
+      const updatedSlots = slots.map(slot => ({
+        ...slot,
+        agentId: slot.agentId || agentId || ''
+      }));
+      await updateShowingTimeSlots(showingId, updatedSlots);
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update time slots');
@@ -54,7 +69,9 @@ export function useCalendarSync(agentId?: string) {
   };
 
   useEffect(() => {
-    setLoading(false);
+    if (properties.length > 0 || showings.length > 0) {
+      setLoading(false);
+    }
   }, [properties, showings]);
 
   return {
