@@ -1,13 +1,12 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
-import type { User } from '../types/user';
-import type { Agent } from '../types/agent';
+import type { AuthUser } from '../types/auth';
 
 type AuthStore = {
-  user: (User & Partial<Agent>) | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
-  setUser: (user: (User & Partial<Agent>) | null) => void;
-  updateUser: (updates: Partial<Agent>) => void;
+  setUser: (user: AuthUser | null) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
 };
@@ -26,15 +25,25 @@ export const useAuthStore = create<AuthStore>((set) => ({
   initialize: async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      set({ 
-        user: {
-          id: session.user.id,
-          email: session.user.email!,
-          name: session.user.user_metadata.name || '',
-          role: session.user.user_metadata.role || 'client'
-        },
-        isAuthenticated: true
-      });
+      const { data: profile } = await supabase
+        .from(session.user.user_metadata.role === 'agent' ? 'agent_profiles' : 'client_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (profile) {
+        set({
+          user: {
+            id: session.user.id,
+            email: session.user.email!,
+            name: profile.name,
+            role: session.user.user_metadata.role,
+            subscriptionStatus: profile.subscription_status,
+            subscriptionTier: profile.subscription_tier
+          },
+          isAuthenticated: true
+        });
+      }
     }
   }
 }));
@@ -43,17 +52,27 @@ export const useAuthStore = create<AuthStore>((set) => ({
 useAuthStore.getState().initialize();
 
 // Listen for auth changes
-supabase.auth.onAuthStateChange((event, session) => {
+supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
-    useAuthStore.setState({
-      user: {
-        id: session.user.id,
-        email: session.user.email!,
-        name: session.user.user_metadata.name || '',
-        role: session.user.user_metadata.role || 'client'
-      },
-      isAuthenticated: true
-    });
+    const { data: profile } = await supabase
+      .from(session.user.user_metadata.role === 'agent' ? 'agent_profiles' : 'client_profiles')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (profile) {
+      useAuthStore.setState({
+        user: {
+          id: session.user.id,
+          email: session.user.email!,
+          name: profile.name,
+          role: session.user.user_metadata.role,
+          subscriptionStatus: profile.subscription_status,
+          subscriptionTier: profile.subscription_tier
+        },
+        isAuthenticated: true
+      });
+    }
   } else if (event === 'SIGNED_OUT') {
     useAuthStore.setState({ user: null, isAuthenticated: false });
   }

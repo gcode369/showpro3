@@ -4,25 +4,17 @@ export type User = {
   id: string;
   email: string;
   name: string;
-  username?: string;
   role: UserRole;
-  phone?: string;
-  subscriptionStatus?: 'active' | 'inactive' | 'trial';
+  subscriptionStatus?: 'trial' | 'active' | 'inactive';
+  subscriptionTier?: 'basic' | 'premium';
 };
 
-export type UserRegistrationData = {
-  email: string;
-  password: string;
+export type UserProfile = {
+  id: string;
+  userId: string;
   name: string;
-  username?: string;
-  phone?: string;
+  email: string;
   role: UserRole;
-  preferredAreas?: string[];
-  preferredContact?: 'email' | 'phone' | 'both';
-  prequalified?: boolean;
-  prequalificationDetails?: {
-    amount?: string;
-    lender?: string;
-    expiryDate?: string;
-  };
+  subscriptionStatus?: 'trial' | 'active' | 'inactive';
+  subscriptionTier?: 'basic' | 'premium';
 };

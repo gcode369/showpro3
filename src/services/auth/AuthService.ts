@@ -1,9 +1,9 @@
 import { supabase } from '../supabase';
-import type { UserRegistrationData } from '../../types/user';
+import type { AuthResponse, UserRegistrationData, AuthUser } from '../../types/auth';
 import { registerUser } from './registration';
 
 export class AuthService {
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<{ session: any; user: AuthUser }> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -16,7 +16,6 @@ export class AuthService {
       const userRole = data.session.user.user_metadata.role || 'client';
       const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
-      // Get user profile
       const { data: profile, error: profileError } = await supabase
         .from(profileTable)
         .select('*')
@@ -27,13 +26,13 @@ export class AuthService {
 
       return {
         session: data.session,
-        profile: {
+        user: {
           id: data.session.user.id,
           email: data.session.user.email!,
           name: profile.name,
           role: userRole,
-          phone: profile.phone,
-          subscriptionStatus: profile.subscription_status
+          subscriptionStatus: profile.subscription_status,
+          subscriptionTier: profile.subscription_tier
         }
       };
     } catch (err) {
@@ -48,14 +47,15 @@ export class AuthService {
     }
   }
 
-  async register(email: string, password: string, userData: Partial<UserRegistrationData>) {
+  async register(email: string, password: string, userData: UserRegistrationData) {
     try {
       return await registerUser({
         email,
         password,
-        name: userData.name || '',
+        name: userData.name,
         phone: userData.phone,
-        role: userData.role || 'client'
+        role: userData.role,
+        username: userData.username
       });
     } catch (err) {
       console.error('Registration error:', err);

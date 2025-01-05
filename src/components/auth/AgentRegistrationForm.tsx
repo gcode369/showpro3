@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../common/Button';
 import { FormField } from './FormField';
@@ -8,7 +8,7 @@ import { validateForm, agentRegistrationSchema } from '../../utils/validation';
 import { checkUsernameAvailability } from '../../services/auth/usernameService';
 import { ErrorAlert } from '../common/ErrorAlert';
 import { LoadingSpinner } from '../common/LoadingSpinner';
-import type { UserRegistrationData } from '../../types/user';
+import type { UserRegistrationData, AuthUser } from '../../types/auth';
 
 export function AgentRegistrationForm() {
   const navigate = useNavigate();
@@ -61,22 +61,23 @@ export function AgentRegistrationForm() {
         role: 'agent'
       };
 
-      const { session } = await authService.register(formData.email, formData.password, registrationData);
+      const result = await authService.register(formData.email, formData.password, registrationData);
 
-      if (!session?.user) {
-        throw new Error('Registration failed');
+      if (!result?.user?.id || !result?.user?.email) {
+        throw new Error('Registration failed - invalid user data');
       }
 
-      setUser({
-        id: session.user.id,
-        email: session.user.email!,
+      // Set user in auth store with required fields
+      const userData: AuthUser = {
+        id: result.user.id,
+        email: result.user.email,
         name: formData.name,
-        username: formData.username,
         role: 'agent',
-        phone: formData.phone,
-        subscriptionStatus: 'trial'
-      });
+        subscriptionStatus: 'trial',
+        subscriptionTier: 'basic'
+      };
 
+      setUser(userData);
       navigate('/subscription');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
