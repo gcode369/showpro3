@@ -11,6 +11,15 @@ import { CalendarPage } from './pages/Calendar';
 import { ClientsPage } from './pages/Clients';
 import { ProfilePage } from './pages/Profile';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import {
+  AgentLoginPage,
+  ClientLoginPage,
+  AgentRegisterPage,
+  ClientRegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage
+} from './pages/auth';
+import { SubscriptionPage } from './pages/subscription';
 
 export default function App() {
   useSession();
@@ -21,13 +30,28 @@ export default function App() {
       <LoadingGuard loading={loading} error={error}>
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/learn-more" element={<LearnMorePage />} />
+            <Route path="/login/agent" element={<AgentLoginPage />} />
+            <Route path="/login/client" element={<ClientLoginPage />} />
+            <Route path="/register/agent" element={<AgentRegisterPage />} />
+            <Route path="/register/client" element={<ClientRegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             
+            {/* Subscription Route - Protected for agents only */}
+            <Route path="/subscription" element={
+              <ProtectedRoute userType="agent">
+                <SubscriptionPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Protected Agent Routes */}
             <Route
               path="/agent"
               element={
-                <ProtectedRoute userType="agent">
+                <ProtectedRoute userType="agent" requiresSubscription>
                   <Layout userType="agent" />
                 </ProtectedRoute>
               }
@@ -38,6 +62,7 @@ export default function App() {
               <Route path="profile" element={<ProfilePage />} />
             </Route>
 
+            {/* Protected Client Routes */}
             <Route
               path="/client"
               element={
