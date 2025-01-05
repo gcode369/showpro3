@@ -7,21 +7,15 @@ export async function createAgentProfile(userId: string, data: AgentProfileData)
       .from('agent_profiles')
       .insert({
         user_id: userId,
-        username: data.username?.toLowerCase(),
         name: data.name,
+        username: data.username?.toLowerCase(),
         phone: data.phone,
-        areas: data.areas || [],
-        bio: data.bio,
-        languages: data.languages || [],
-        certifications: data.certifications || [],
         subscription_tier: data.subscription_tier,
         subscription_status: data.subscription_status
       });
 
     if (error) {
-      if (error.code === '23505') { // Unique violation
-        throw new Error('Username is already taken');
-      }
+      console.error('Agent profile creation error:', error);
       throw error;
     }
   } catch (err) {
@@ -44,7 +38,10 @@ export async function createClientProfile(userId: string, data: ClientProfileDat
         prequalification_details: data.prequalification_details
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Client profile creation error:', error);
+      throw error;
+    }
   } catch (err) {
     console.error('Create client profile error:', err);
     throw err instanceof Error ? err : new Error('Failed to create client profile');
