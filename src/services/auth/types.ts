@@ -1,16 +1,17 @@
 import type { UserRole } from '../../types/user';
 
-export type AgentProfileData = {
+export type ProfileData = {
   name: string;
   username?: string;
   phone?: string;
+};
+
+export type AgentProfileData = ProfileData & {
   subscription_tier: 'basic' | 'premium';
   subscription_status: 'trial' | 'active' | 'inactive';
 };
 
-export type ClientProfileData = {
-  name: string;
-  phone?: string;
+export type ClientProfileData = ProfileData & {
   preferred_areas?: string[];
   preferred_contact?: 'email' | 'phone' | 'both';
   prequalified?: boolean;
@@ -19,4 +20,13 @@ export type ClientProfileData = {
     lender?: string;
     expiry_date?: string;
   };
+};
+
+export type RegistrationResult = {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
+  };
+  session: any;
 };

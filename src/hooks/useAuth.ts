@@ -28,13 +28,13 @@ export function useAuth() {
           navigate('/subscription');
           return;
         }
+        navigate('/agent');
+      } else {
+        navigate('/client');
       }
-
-      navigate(user.role === 'agent' ? '/agent' : '/client');
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
-      throw err;
     } finally {
       setLoading(false);
     }
