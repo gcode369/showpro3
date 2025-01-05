@@ -1,19 +1,28 @@
-import type { UserRole } from './user';
+export type UserRole = 'agent' | 'client';
 
-export type AuthResponse = {
-  session: {
-    user: {
-      id: string;
-      email: string;
-    };
-  } | null;
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  subscriptionStatus?: 'trial' | 'active' | 'inactive';
+  subscriptionTier?: 'basic' | 'premium';
+};
+
+export type AuthSession = {
   user: {
     id: string;
     email: string;
-    name: string;
-    role: UserRole;
-    subscriptionStatus?: 'trial' | 'active' | 'inactive';
+    user_metadata: {
+      name: string;
+      role: UserRole;
+    };
   };
+};
+
+export type AuthResponse = {
+  session: AuthSession | null;
+  user: AuthUser;
 };
 
 export type UserRegistrationData = {
@@ -31,13 +40,4 @@ export type UserRegistrationData = {
     lender?: string;
     expiryDate?: string;
   };
-};
-
-export type AuthUser = {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  subscriptionStatus?: 'trial' | 'active' | 'inactive';
-  subscriptionTier?: 'basic' | 'premium';
 };
