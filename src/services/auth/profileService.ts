@@ -5,7 +5,7 @@ export async function createAgentProfile(userId: string, data: AgentProfileData)
   try {
     const { error } = await supabase
       .from('agent_profiles')
-      .insert({
+      .upsert({
         user_id: userId,
         name: data.name,
         username: data.username?.toLowerCase(),
@@ -20,7 +20,7 @@ export async function createAgentProfile(userId: string, data: AgentProfileData)
     }
   } catch (err) {
     console.error('Create agent profile error:', err);
-    throw err instanceof Error ? err : new Error('Failed to create agent profile');
+    throw err;
   }
 }
 
@@ -28,7 +28,7 @@ export async function createClientProfile(userId: string, data: ClientProfileDat
   try {
     const { error } = await supabase
       .from('client_profiles')
-      .insert({
+      .upsert({
         user_id: userId,
         name: data.name,
         phone: data.phone,
@@ -44,6 +44,6 @@ export async function createClientProfile(userId: string, data: ClientProfileDat
     }
   } catch (err) {
     console.error('Create client profile error:', err);
-    throw err instanceof Error ? err : new Error('Failed to create client profile');
+    throw err;
   }
 }

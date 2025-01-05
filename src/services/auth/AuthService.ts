@@ -5,11 +5,10 @@ import type { AuthUser, UserRegistrationData } from '../../types/auth';
 export class AuthService {
   async register(email: string, password: string, userData: UserRegistrationData) {
     try {
-      // Ensure email and password from params match userData
       const registrationData: UserRegistrationData = {
         ...userData,
-        email, // Use email from params
-        password // Use password from params
+        email,
+        password
       };
 
       const result = await registerUser(registrationData);
@@ -33,25 +32,25 @@ export class AuthService {
       const userRole = data.session.user.user_metadata.role || 'client';
       const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
-      // Get user profile
+      // Get user profile - use maybeSingle to handle missing profiles
       const { data: profile, error: profileError } = await supabase
         .from(profileTable)
         .select('*')
         .eq('user_id', data.session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        throw new Error('Failed to fetch user profile');
       }
 
+      // Create user object even if profile doesn't exist
       const user: AuthUser = {
         id: data.session.user.id,
         email: data.session.user.email!,
-        name: profile.name,
+        name: profile?.name || data.session.user.user_metadata.name || '',
         role: userRole,
-        subscriptionStatus: profile.subscription_status || 'trial',
-        subscriptionTier: profile.subscription_tier || 'basic'
+        subscriptionStatus: profile?.subscription_status || 'trial',
+        subscriptionTier: profile?.subscription_tier || 'basic'
       };
 
       return { session: data.session, user };
