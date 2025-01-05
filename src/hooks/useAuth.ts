@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth/AuthService';
 import { useAuthStore } from '../store/authStore';
-import type { UserProfile } from '../types/auth';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -15,24 +14,25 @@ export function useAuth() {
       setLoading(true);
       setError(null);
 
-      const { session, profile } = await authService.login(email, password);
+      const { session, user } = await authService.login(email, password);
 
       if (!session?.user) {
         throw new Error('Login failed - no session created');
       }
 
-      setUser(profile);
+      setUser(user);
 
       // For agents, check subscription status
-      if (profile.role === 'agent') {
-        if (!profile.subscriptionStatus || profile.subscriptionStatus === 'inactive') {
+      if (user.role === 'agent') {
+        if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
           navigate('/subscription');
           return;
         }
       }
 
-      navigate(profile.role === 'agent' ? '/agent' : '/client');
+      navigate(user.role === 'agent' ? '/agent' : '/client');
     } catch (err) {
+      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
       throw err;
     } finally {

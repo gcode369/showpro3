@@ -1,5 +1,5 @@
 import { supabase } from '../supabase';
-import type { AuthResponse, UserRegistrationData, AuthUser } from '../../types/auth';
+import type { AuthUser } from '../../types/auth';
 import { registerUser } from './registration';
 
 export class AuthService {
@@ -16,13 +16,35 @@ export class AuthService {
       const userRole = data.session.user.user_metadata.role || 'client';
       const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
+      // Get user profile with subscription info
       const { data: profile, error: profileError } = await supabase
         .from(profileTable)
         .select('*')
         .eq('user_id', data.session.user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        throw new Error('Failed to fetch user profile');
+      }
+
+      // Ensure subscription status exists for agents
+      if (userRole === 'agent' && !profile.subscription_status) {
+        const { error: updateError } = await supabase
+          .from('agent_profiles')
+          .update({
+            subscription_status: 'trial',
+            subscription_tier: 'basic'
+          })
+          .eq('user_id', data.session.user.id);
+
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+        }
+
+        profile.subscription_status = 'trial';
+        profile.subscription_tier = 'basic';
+      }
 
       return {
         session: data.session,
@@ -31,8 +53,8 @@ export class AuthService {
           email: data.session.user.email!,
           name: profile.name,
           role: userRole,
-          subscriptionStatus: profile.subscription_status,
-          subscriptionTier: profile.subscription_tier
+          subscriptionStatus: profile.subscription_status || undefined,
+          subscriptionTier: profile.subscription_tier || undefined
         }
       };
     } catch (err) {
@@ -47,25 +69,12 @@ export class AuthService {
     }
   }
 
-  async register(email: string, password: string, userData: UserRegistrationData) {
-    try {
-      return await registerUser({
-        email,
-        password,
-        name: userData.name,
-        phone: userData.phone,
-        role: userData.role,
-        username: userData.username
-      });
-    } catch (err) {
-      console.error('Registration error:', err);
-      throw err;
-    }
-  }
-
-  async logout() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+  async register(email: string, password: string, data: any) {
+    return registerUser({
+      email,
+      password,
+      ...data
+    });
   }
 }
 
