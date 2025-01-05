@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
-import type { UserRegistrationData, AuthUser } from '../../types/auth';
-import { createAgentProfile, createClientProfile } from './profileService';
+import { createUserProfile } from './profileService';
+import type { AuthUser, UserRegistrationData } from '../../types/auth';
 
 export async function registerUser(data: UserRegistrationData): Promise<{ user: AuthUser; session: any }> {
   try {
@@ -30,24 +30,14 @@ export async function registerUser(data: UserRegistrationData): Promise<{ user: 
 
     // Create profile
     try {
-      if (data.role === 'agent') {
-        await createAgentProfile(authData.user.id, {
-          name: data.name,
-          username: data.username?.toLowerCase(),
-          phone: data.phone,
-          subscription_tier: 'basic',
-          subscription_status: 'trial'
-        });
-      } else {
-        await createClientProfile(authData.user.id, {
-          name: data.name,
-          phone: data.phone,
-          preferred_areas: data.preferredAreas || [],
-          preferred_contact: data.preferredContact || 'email',
-          prequalified: data.prequalified || false,
-          prequalification_details: data.prequalificationDetails
-        });
-      }
+      await createUserProfile(authData.user.id, data.role, {
+        user_id: authData.user.id,
+        name: data.name,
+        ...data.role === 'agent' && {
+          subscription_status: 'trial',
+          subscription_tier: 'basic'
+        }
+      });
 
       // Return user object
       const user: AuthUser = {

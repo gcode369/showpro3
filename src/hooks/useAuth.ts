@@ -14,34 +14,41 @@ export function useAuth() {
       setLoading(true);
       setError(null);
 
-      const { session, user } = await authService.login(email, password);
-
-      if (!session?.user) {
-        throw new Error('Login failed - no session created');
-      }
-
+      const { user } = await authService.login(email, password);
       setUser(user);
 
-      // Navigate based on role and subscription status
       if (user.role === 'agent') {
         if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
           navigate('/subscription');
-          return;
+        } else {
+          navigate('/agent');
         }
-        navigate('/agent');
       } else {
         navigate('/client');
       }
     } catch (err) {
-      console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
+  const register = async (email: string, password: string, userData: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      await authService.register(email, password, userData);
+      await login(email, password); // Auto login after registration
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
+      setLoading(false);
+    }
+  };
+
   return {
     login,
+    register,
     loading,
     error
   };

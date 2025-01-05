@@ -1,8 +1,7 @@
-```typescript
 import { supabase } from '../supabase';
 
 export class PasswordResetService {
-  async sendResetLink(email: string) {
+  async sendResetLink(email: string): Promise<void> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`
     });
@@ -10,7 +9,7 @@ export class PasswordResetService {
     if (error) throw error;
   }
 
-  async resetPassword(newPassword: string) {
+  async resetPassword(newPassword: string): Promise<void> {
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     });
@@ -20,4 +19,3 @@ export class PasswordResetService {
 }
 
 export const passwordResetService = new PasswordResetService();
-```
