@@ -1,7 +1,25 @@
 import { supabase } from '../supabase';
-import type { AuthUser } from '../../types/auth';
+import { registerUser } from './registration';
+import type { AuthUser, UserRegistrationData } from '../../types/auth';
 
 export class AuthService {
+  async register(email: string, password: string, userData: UserRegistrationData) {
+    try {
+      // Ensure email and password from params match userData
+      const registrationData: UserRegistrationData = {
+        ...userData,
+        email, // Use email from params
+        password // Use password from params
+      };
+
+      const result = await registerUser(registrationData);
+      return result;
+    } catch (err) {
+      console.error('Registration error:', err);
+      throw err;
+    }
+  }
+
   async login(email: string, password: string): Promise<{ session: any; user: AuthUser }> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,66 +45,25 @@ export class AuthService {
         throw new Error('Failed to fetch user profile');
       }
 
-      // For agents, ensure subscription data exists
-      if (userRole === 'agent') {
-        if (!profile.subscription_status) {
-          const { error: updateError } = await supabase
-            .from('agent_profiles')
-            .update({
-              subscription_status: 'trial',
-              subscription_tier: 'basic'
-            })
-            .eq('user_id', data.session.user.id);
-
-          if (updateError) {
-            console.error('Profile update error:', updateError);
-          }
-          profile.subscription_status = 'trial';
-          profile.subscription_tier = 'basic';
-        }
-      }
-
       const user: AuthUser = {
         id: data.session.user.id,
         email: data.session.user.email!,
         name: profile.name,
         role: userRole,
-        subscriptionStatus: profile.subscription_status,
-        subscriptionTier: profile.subscription_tier
+        subscriptionStatus: profile.subscription_status || 'trial',
+        subscriptionTier: profile.subscription_tier || 'basic'
       };
 
       return { session: data.session, user };
     } catch (err) {
       console.error('Login error:', err);
-      if (err instanceof Error) {
-        if (err.message.includes('Invalid login credentials')) {
-          throw new Error('Invalid email or password');
-        }
-        throw err;
-      }
-      throw new Error('Login failed');
+      throw err instanceof Error ? err : new Error('Login failed');
     }
   }
 
-  async register(email: string, password: string, data: any) {
-    try {
-      const result = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: data.name,
-            role: data.role
-          }
-        }
-      });
-
-      if (result.error) throw result.error;
-      return result.data;
-    } catch (err) {
-      console.error('Registration error:', err);
-      throw err;
-    }
+  async logout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   }
 }
 

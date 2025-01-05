@@ -26,9 +26,9 @@ export function useAuth() {
       if (user.role === 'agent') {
         if (!user.subscriptionStatus || user.subscriptionStatus === 'inactive') {
           navigate('/subscription');
-          return;
+        } else {
+          navigate('/agent');
         }
-        navigate('/agent');
       } else {
         navigate('/client');
       }

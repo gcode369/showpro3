@@ -24,11 +24,6 @@ export function AgentRegistrationForm() {
     confirmPassword: ''
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -63,14 +58,14 @@ export function AgentRegistrationForm() {
 
       const result = await authService.register(formData.email, formData.password, registrationData);
 
-      if (!result?.user?.id || !result?.user?.email) {
-        throw new Error('Registration failed - invalid user data');
+      if (!result?.user) {
+        throw new Error('Registration failed');
       }
 
-      // Set user in auth store with required fields
+      // Set user in auth store
       const userData: AuthUser = {
         id: result.user.id,
-        email: result.user.email,
+        email: result.user.email, // Email is guaranteed to be defined by registration service
         name: formData.name,
         role: 'agent',
         subscriptionStatus: 'trial',
@@ -84,6 +79,11 @@ export function AgentRegistrationForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (

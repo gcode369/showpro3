@@ -1,8 +1,9 @@
 import { supabase } from '../supabase';
 import type { UserRegistrationData } from '../../types/auth';
 import { createAgentProfile, createClientProfile } from './profileService';
+import type { RegistrationResult } from './types';
 
-export async function registerUser(data: UserRegistrationData) {
+export async function registerUser(data: UserRegistrationData): Promise<RegistrationResult> {
   try {
     // Create auth user
     const { data: authData, error } = await supabase.auth.signUp({
@@ -24,8 +25,8 @@ export async function registerUser(data: UserRegistrationData) {
       throw error;
     }
 
-    if (!authData.user) {
-      throw new Error('Registration failed - no user created');
+    if (!authData.user?.email) {
+      throw new Error('Registration failed - invalid user data');
     }
 
     // Create role-specific profile
@@ -48,7 +49,14 @@ export async function registerUser(data: UserRegistrationData) {
       });
     }
 
-    return { user: authData.user, session: authData.session };
+    return {
+      user: {
+        id: authData.user.id,
+        email: authData.user.email,
+        role: data.role
+      },
+      session: authData.session
+    };
   } catch (err) {
     console.error('Registration error:', err);
     throw err;
