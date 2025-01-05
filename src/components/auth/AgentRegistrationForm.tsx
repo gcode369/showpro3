@@ -47,9 +47,14 @@ export function AgentRegistrationForm() {
         throw new Error('Registration failed');
       }
 
+      // Ensure we have required user data before setting the user
+      if (!result.user.email) {
+        throw new Error('Invalid user data received');
+      }
+
       setUser({
         id: result.user.id,
-        email: result.user.email,
+        email: result.user.email, // Now TypeScript knows this is not undefined
         name: formData.name,
         role: 'agent',
         subscriptionStatus: 'trial',

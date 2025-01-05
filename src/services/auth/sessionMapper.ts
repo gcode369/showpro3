@@ -6,16 +6,13 @@ export function mapSessionToAuthSession(session: Session): AuthSession {
     throw new Error('Invalid session: missing user email');
   }
 
-  const role = session.user.user_metadata?.role as UserRole || 'client';
-  const name = session.user.user_metadata?.name as string || '';
-
   return {
     user: {
       id: session.user.id,
       email: session.user.email,
       user_metadata: {
-        name,
-        role
+        name: session.user.user_metadata?.name || '',
+        role: (session.user.user_metadata?.role as UserRole) || 'client'
       }
     }
   };

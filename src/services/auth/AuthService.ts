@@ -1,7 +1,7 @@
 import { supabase } from '../supabase';
-import { getUserProfile, createUserProfile } from './profileService';
-import { getSession } from './sessionManager';
-import type { AuthUser } from '../../types/auth';
+import { getUserProfile } from './profileService';
+import type { AuthUser, UserRegistrationData } from '../../types/auth';
+import { registerUser } from './registration';
 
 export class AuthService {
   async login(email: string, password: string): Promise<{ user: AuthUser }> {
@@ -33,25 +33,9 @@ export class AuthService {
     }
   }
 
-  async register(email: string, password: string, userData: any) {
+  async register(email: string, password: string, userData: UserRegistrationData) {
     try {
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: userData.name,
-            role: userData.role
-          }
-        }
-      });
-
-      if (error) throw error;
-      if (!user) throw new Error('Registration failed');
-
-      await createUserProfile(user.id, userData.role, userData);
-
-      return { user };
+      return await registerUser({ ...userData, email, password });
     } catch (err) {
       console.error('Registration error:', err);
       throw new Error(err instanceof Error ? err.message : 'Registration failed');
