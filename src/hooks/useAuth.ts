@@ -28,10 +28,10 @@ export function useAuth() {
           navigate('/subscription');
           return;
         }
-        navigate('/agent');
-      } else {
-        navigate('/client');
       }
+
+      // Navigate based on role
+      navigate(user.role === 'agent' ? '/agent' : '/client');
     } catch (err) {
       console.error('Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');

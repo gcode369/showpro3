@@ -5,8 +5,8 @@ import type { RegistrationResult } from './types';
 
 export async function registerUser(data: UserRegistrationData): Promise<RegistrationResult> {
   try {
-    // Create auth user with metadata
-    const { data: authData, error } = await supabase.auth.signUp({
+    // Step 1: Create auth user
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -17,19 +17,19 @@ export async function registerUser(data: UserRegistrationData): Promise<Registra
       }
     });
 
-    if (error) {
-      console.error('Auth signup error:', error);
-      if (error.message.includes('already registered')) {
+    if (signUpError) {
+      console.error('Auth signup error:', signUpError);
+      if (signUpError.message.includes('already registered')) {
         throw new Error('An account with this email already exists');
       }
-      throw error;
+      throw signUpError;
     }
 
     if (!authData.user) {
       throw new Error('Registration failed - no user created');
     }
 
-    // Create role-specific profile
+    // Step 2: Create profile
     try {
       if (data.role === 'agent') {
         await createAgentProfile(authData.user.id, {
@@ -49,21 +49,25 @@ export async function registerUser(data: UserRegistrationData): Promise<Registra
           prequalification_details: data.prequalificationDetails
         });
       }
+
+      // Step 3: Return success result with full user object
+      return {
+        user: {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: data.name,
+          role: data.role,
+          subscriptionStatus: data.role === 'agent' ? 'trial' : undefined,
+          subscriptionTier: data.role === 'agent' ? 'basic' : undefined
+        },
+        session: authData.session
+      };
     } catch (profileError) {
       console.error('Profile creation error:', profileError);
-      // Delete auth user if profile creation fails
+      // Clean up: Delete auth user if profile creation fails
       await supabase.auth.admin.deleteUser(authData.user.id);
       throw new Error('Failed to create user profile');
     }
-
-    return {
-      user: {
-        id: authData.user.id,
-        email: authData.user.email!,
-        role: data.role
-      },
-      session: authData.session
-    };
   } catch (err) {
     console.error('Registration error:', err);
     throw err;

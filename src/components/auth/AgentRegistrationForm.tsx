@@ -4,11 +4,9 @@ import { Button } from '../common/Button';
 import { FormField } from './FormField';
 import { authService } from '../../services/auth/AuthService';
 import { useAuthStore } from '../../store/authStore';
-import { validateForm, agentRegistrationSchema } from '../../utils/validation';
-import { checkUsernameAvailability } from '../../services/auth/usernameService';
 import { ErrorAlert } from '../common/ErrorAlert';
 import { LoadingSpinner } from '../common/LoadingSpinner';
-import type { UserRegistrationData, AuthUser } from '../../types/auth';
+import type { UserRegistrationData } from '../../types/auth';
 
 export function AgentRegistrationForm() {
   const navigate = useNavigate();
@@ -30,23 +28,10 @@ export function AgentRegistrationForm() {
     setLoading(true);
 
     try {
-      // Validate form data
-      const validationResult = await validateForm(agentRegistrationSchema, formData);
-      if (!validationResult.success) {
-        setError(validationResult.error);
-        setLoading(false);
-        return;
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match');
       }
 
-      // Check username availability
-      const isAvailable = await checkUsernameAvailability(formData.username);
-      if (!isAvailable) {
-        setError('Username is already taken');
-        setLoading(false);
-        return;
-      }
-
-      // Register user
       const registrationData: UserRegistrationData = {
         email: formData.email,
         password: formData.password,
@@ -62,19 +47,18 @@ export function AgentRegistrationForm() {
         throw new Error('Registration failed');
       }
 
-      // Set user in auth store
-      const userData: AuthUser = {
+      setUser({
         id: result.user.id,
-        email: result.user.email, // Email is guaranteed to be defined by registration service
+        email: result.user.email,
         name: formData.name,
         role: 'agent',
         subscriptionStatus: 'trial',
         subscriptionTier: 'basic'
-      };
+      });
 
-      setUser(userData);
       navigate('/subscription');
     } catch (err) {
+      console.error('Registration error:', err);
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setLoading(false);
@@ -107,7 +91,6 @@ export function AgentRegistrationForm() {
           value={formData.username}
           onChange={handleChange}
           required
-          placeholder="Choose a unique username"
         />
 
         <FormField
@@ -125,7 +108,6 @@ export function AgentRegistrationForm() {
           type="tel"
           value={formData.phone}
           onChange={handleChange}
-          placeholder="(XXX) XXX-XXXX"
           required
         />
 

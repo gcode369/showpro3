@@ -17,19 +17,20 @@ export function useOpenHouseForm() {
         throw new Error('User not authenticated');
       }
 
-      await openHouseService.createOpenHouse({
+      const openHouseData = {
         ...formData,
         agentId: user.id,
         agentName: user.name
-      });
+      };
 
+      await openHouseService.createOpenHouse(openHouseData);
+      setLoading(false);
       return true;
     } catch (err) {
       console.error('Open house creation error:', err);
       setError(err instanceof Error ? err.message : 'Failed to create open house');
-      return false;
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 

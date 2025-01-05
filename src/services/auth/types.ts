@@ -1,4 +1,4 @@
-import type { UserRole } from '../../types/user';
+import type { AuthUser } from '../../types/auth';
 
 export type ProfileData = {
   name: string;
@@ -23,10 +23,6 @@ export type ClientProfileData = ProfileData & {
 };
 
 export type RegistrationResult = {
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
-  };
+  user: AuthUser;
   session: any;
 };

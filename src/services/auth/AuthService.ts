@@ -32,18 +32,14 @@ export class AuthService {
       const userRole = data.session.user.user_metadata.role || 'client';
       const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
-      // Get user profile - use maybeSingle to handle missing profiles
-      const { data: profile, error: profileError } = await supabase
+      // Get user profile
+      const { data: profile } = await supabase
         .from(profileTable)
         .select('*')
         .eq('user_id', data.session.user.id)
         .maybeSingle();
 
-      if (profileError) {
-        console.error('Profile fetch error:', profileError);
-      }
-
-      // Create user object even if profile doesn't exist
+      // Create user object
       const user: AuthUser = {
         id: data.session.user.id,
         email: data.session.user.email!,
