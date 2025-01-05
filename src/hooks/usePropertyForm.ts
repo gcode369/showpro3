@@ -36,7 +36,11 @@ export function usePropertyForm() {
       }
 
       // Create property
-      await propertyService.createProperty(formData, user.id);
+      await propertyService.createProperty({
+        ...formData,
+        agent_id: user.id
+      });
+      
       return true;
     } catch (err) {
       console.error('Property form error:', err);

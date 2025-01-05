@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { openHouseService } from '../services/openHouse/OpenHouseService';
 import type { OpenHouse } from '../types/openHouse';
 
 export function useOpenHouseForm() {
@@ -16,19 +17,15 @@ export function useOpenHouseForm() {
         throw new Error('User not authenticated');
       }
 
-      const openHouseData = {
+      await openHouseService.createOpenHouse({
         ...formData,
         agentId: user.id,
-        agentName: user.name,
-        attendees: []
-      };
+        agentName: user.name
+      });
 
-      // TODO: Implement API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      console.log('Creating open house:', openHouseData);
-      
       return true;
     } catch (err) {
+      console.error('Open house creation error:', err);
       setError(err instanceof Error ? err.message : 'Failed to create open house');
       return false;
     } finally {
