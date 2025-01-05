@@ -23,27 +23,49 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ user: null, isAuthenticated: false });
   },
   initialize: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from(session.user.user_metadata.role === 'agent' ? 'agent_profiles' : 'client_profiles')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .single();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const userRole = session.user.user_metadata.role;
+        const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
-      if (profile) {
-        set({
-          user: {
-            id: session.user.id,
-            email: session.user.email!,
-            name: profile.name,
-            role: session.user.user_metadata.role,
-            subscriptionStatus: profile.subscription_status,
-            subscriptionTier: profile.subscription_tier
-          },
-          isAuthenticated: true
-        });
+        try {
+          const { data: profile } = await supabase
+            .from(profileTable)
+            .select('*')
+            .eq('user_id', session.user.id)
+            .maybeSingle(); // Use maybeSingle instead of single to handle missing profiles
+
+          // Set user state even if profile doesn't exist yet
+          set({
+            user: {
+              id: session.user.id,
+              email: session.user.email!,
+              name: session.user.user_metadata.name || '',
+              role: userRole,
+              subscriptionStatus: profile?.subscription_status || 'trial',
+              subscriptionTier: profile?.subscription_tier || 'basic'
+            },
+            isAuthenticated: true
+          });
+        } catch (profileErr) {
+          console.error('Profile fetch error:', profileErr);
+          // Still set basic user info even if profile fetch fails
+          set({
+            user: {
+              id: session.user.id,
+              email: session.user.email!,
+              name: session.user.user_metadata.name || '',
+              role: userRole,
+              subscriptionStatus: 'trial',
+              subscriptionTier: 'basic'
+            },
+            isAuthenticated: true
+          });
+        }
       }
+    } catch (err) {
+      console.error('Auth initialization error:', err);
     }
   }
 }));
@@ -54,21 +76,38 @@ useAuthStore.getState().initialize();
 // Listen for auth changes
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
-    const { data: profile } = await supabase
-      .from(session.user.user_metadata.role === 'agent' ? 'agent_profiles' : 'client_profiles')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single();
+    try {
+      const userRole = session.user.user_metadata.role;
+      const profileTable = userRole === 'agent' ? 'agent_profiles' : 'client_profiles';
 
-    if (profile) {
+      const { data: profile } = await supabase
+        .from(profileTable)
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle(); // Use maybeSingle instead of single
+
       useAuthStore.setState({
         user: {
           id: session.user.id,
           email: session.user.email!,
-          name: profile.name,
+          name: session.user.user_metadata.name || '',
+          role: userRole,
+          subscriptionStatus: profile?.subscription_status || 'trial',
+          subscriptionTier: profile?.subscription_tier || 'basic'
+        },
+        isAuthenticated: true
+      });
+    } catch (err) {
+      console.error('Auth state change error:', err);
+      // Set basic user info on error
+      useAuthStore.setState({
+        user: {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata.name || '',
           role: session.user.user_metadata.role,
-          subscriptionStatus: profile.subscription_status,
-          subscriptionTier: profile.subscription_tier
+          subscriptionStatus: 'trial',
+          subscriptionTier: 'basic'
         },
         isAuthenticated: true
       });

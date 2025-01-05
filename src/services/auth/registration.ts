@@ -5,15 +5,14 @@ import type { RegistrationResult } from './types';
 
 export async function registerUser(data: UserRegistrationData): Promise<RegistrationResult> {
   try {
-    // Create auth user
+    // Create auth user with metadata
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           name: data.name,
-          role: data.role,
-          phone: data.phone
+          role: data.role
         }
       }
     });
@@ -25,8 +24,8 @@ export async function registerUser(data: UserRegistrationData): Promise<Registra
       throw error;
     }
 
-    if (!authData.user?.email) {
-      throw new Error('Registration failed - invalid user data');
+    if (!authData.user) {
+      throw new Error('Registration failed - no user created');
     }
 
     // Create role-specific profile
@@ -52,7 +51,7 @@ export async function registerUser(data: UserRegistrationData): Promise<Registra
     return {
       user: {
         id: authData.user.id,
-        email: authData.user.email,
+        email: authData.user.email!,
         role: data.role
       },
       session: authData.session
