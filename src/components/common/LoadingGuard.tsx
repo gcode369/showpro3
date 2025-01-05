@@ -10,7 +10,7 @@ type LoadingGuardProps = {
 export function LoadingGuard({ loading, error, children }: LoadingGuardProps) {
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-white/80 flex items-center justify-center z-50">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -18,8 +18,10 @@ export function LoadingGuard({ loading, error, children }: LoadingGuardProps) {
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-        {error}
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md w-full p-4 bg-red-50 text-red-700 rounded-lg">
+          <p className="text-center">{error}</p>
+        </div>
       </div>
     );
   }

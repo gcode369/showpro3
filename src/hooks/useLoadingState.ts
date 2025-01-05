@@ -1,23 +1,15 @@
-import { useState, useCallback } from 'react';
+import { create } from 'zustand';
 
-export function useLoadingState() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+type LoadingState = {
+  loading: boolean;
+  error: string | null;
+  startLoading: () => void;
+  stopLoading: (error?: string) => void;
+};
 
-  const startLoading = useCallback(() => {
-    setLoading(true);
-    setError(null);
-  }, []);
-
-  const stopLoading = useCallback((error?: string) => {
-    setLoading(false);
-    setError(error || null);
-  }, []);
-
-  return {
-    loading,
-    error,
-    startLoading,
-    stopLoading
-  };
-}
+export const useLoadingState = create<LoadingState>((set) => ({
+  loading: true, // Start with loading true
+  error: null,
+  startLoading: () => set({ loading: true, error: null }),
+  stopLoading: (error) => set({ loading: false, error: error || null })
+}));
